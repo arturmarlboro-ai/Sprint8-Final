@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Yandex-Practicum/go-db-sql-final/parcel"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -14,24 +16,24 @@ const (
 	ParcelStatusDelivered  = "delivered"
 )
 
-type Parcel struct {
-	Number    int
-	Client    int
-	Status    string
-	Address   string
-	CreatedAt string
-}
+// type Parcel struct {
+// 	Number    int
+// 	Client    int
+// 	Status    string
+// 	Address   string
+// 	CreatedAt string
+// }
 
 type ParcelService struct {
-	store ParcelStore
+	store parcel.ParcelStore
 }
 
-func NewParcelService(store ParcelStore) ParcelService {
+func NewParcelService(store parcel.ParcelStore) ParcelService {
 	return ParcelService{store: store}
 }
 
-func (s ParcelService) Register(client int, address string) (Parcel, error) {
-	parcel := Parcel{
+func (s ParcelService) Register(client int, address string) (parcel.Parcel, error) {
+	parcel := parcel.Parcel{
 		Client:    client,
 		Status:    ParcelStatusRegistered,
 		Address:   address,
@@ -98,8 +100,13 @@ func (s ParcelService) Delete(number int) error {
 
 func main() {
 	// настройте подключение к БД
-
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// создайте объект ParcelStore функцией NewParcelStore
+	store := parcel.NewParcelStore(db)
 	service := NewParcelService(store)
 
 	// регистрация посылки
