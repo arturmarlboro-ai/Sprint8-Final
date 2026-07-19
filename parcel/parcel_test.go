@@ -6,6 +6,10 @@ import (
 	"testing"
 	"time"
 
+	//"structs"
+	"github.com/Yandex-Practicum/go-db-sql-final/structs"
+
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
@@ -20,8 +24,8 @@ var (
 )
 
 // getTestParcel возвращает тестовую посылку
-func getTestParcel() Parcel {
-	return Parcel{
+func getTestParcel() structs.Parcel {
+	return structs.Parcel{
 		Client:    1000,
 		Status:    "registered",
 		Address:   "test",
@@ -49,8 +53,7 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	parcell, err := store.Get(id)
 	require.NoError(t, err)
-	require.NotEmpty(t, parcell)
-	require.Equal(t, parcel, parcell)
+	assert.Equal(t, parcel, parcell)
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
@@ -82,7 +85,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, p.Address)
+	assert.Equal(t, newAddress, p.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -105,7 +108,7 @@ func TestSetStatus(t *testing.T) {
 	require.NoError(t, err)
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, status, p.Status)
+	assert.Equal(t, status, p.Status)
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	p, err = store.Get(id)
@@ -121,12 +124,12 @@ func TestGetByClient(t *testing.T) {
 	defer db.Close()
 	store := NewParcelStore(db)
 
-	parcels := []Parcel{
+	parcels := []structs.Parcel{
 		getTestParcel(),
 		getTestParcel(),
 		getTestParcel(),
 	}
-	parcelMap := map[int]Parcel{}
+	parcelMap := map[int]structs.Parcel{}
 
 	// задаём всем посылкам один и тот же идентификатор клиента
 	client := randRange.Intn(10_000_000)
@@ -152,15 +155,15 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь в отсутствии ошибки
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
 	require.NoError(t, err)
-	require.Equal(t, len(storedParcels), len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
 		expected, ok := parcelMap[parcel.Number]
-		require.True(t, ok)
-		require.Equal(t, expected.Client, parcel.Client)
+		assert.True(t, ok)
+		assert.Equal(t, expected, parcel)
 		require.Equal(t, expected.Status, parcel.Status)
 		require.Equal(t, expected.Address, parcel.Address)
 		require.Equal(t, expected.CreatedAt, parcel.CreatedAt)
