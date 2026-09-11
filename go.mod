@@ -1,4 +1,5 @@
 module github.com/Yandex-Practicum/go-db-sql-final
+//module Sprint8-Final
 
 go 1.21
 

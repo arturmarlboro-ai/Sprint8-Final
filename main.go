@@ -5,50 +5,39 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Yandex-Practicum/go-db-sql-final/parcel"
+	"github.com/Yandex-Practicum/go-db-sql-final/structs"
+
 	_ "modernc.org/sqlite"
 )
 
-const (
-	ParcelStatusRegistered = "registered"
-	ParcelStatusSent       = "sent"
-	ParcelStatusDelivered  = "delivered"
-)
-
-type Parcel struct {
-	Number    int
-	Client    int
-	Status    string
-	Address   string
-	CreatedAt string
-}
-
 type ParcelService struct {
-	store ParcelStore
+	store parcel.ParcelStore
 }
 
-func NewParcelService(store ParcelStore) ParcelService {
+func NewParcelService(store parcel.ParcelStore) ParcelService {
 	return ParcelService{store: store}
 }
 
-func (s ParcelService) Register(client int, address string) (Parcel, error) {
-	parcel := Parcel{
+func (s ParcelService) Register(client int, address string) (structs.Parcel, error) {
+	prc := structs.Parcel{
 		Client:    client,
-		Status:    ParcelStatusRegistered,
+		Status:    structs.ParcelStatusRegistered,
 		Address:   address,
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	id, err := s.store.Add(parcel)
+	id, err := s.store.Add(prc)
 	if err != nil {
-		return parcel, err
+		return prc, err
 	}
 
-	parcel.Number = id
+	prc.Number = id
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
-		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
+		prc.Number, prc.Address, prc.Client, prc.CreatedAt)
 
-	return parcel, nil
+	return prc, nil
 }
 
 func (s ParcelService) PrintClientParcels(client int) error {
@@ -75,11 +64,11 @@ func (s ParcelService) NextStatus(number int) error {
 
 	var nextStatus string
 	switch parcel.Status {
-	case ParcelStatusRegistered:
-		nextStatus = ParcelStatusSent
-	case ParcelStatusSent:
-		nextStatus = ParcelStatusDelivered
-	case ParcelStatusDelivered:
+	case structs.ParcelStatusRegistered:
+		nextStatus = structs.ParcelStatusSent
+	case structs.ParcelStatusSent:
+		nextStatus = structs.ParcelStatusDelivered
+	case structs.ParcelStatusDelivered:
 		return nil
 	}
 
@@ -98,8 +87,14 @@ func (s ParcelService) Delete(number int) error {
 
 func main() {
 	// настройте подключение к БД
-
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer db.Close()
+	// создайте объект ParcelStore функцией NewParcelStore
+	store := parcel.NewParcelStore(db)
 	service := NewParcelService(store)
 
 	// регистрация посылки
